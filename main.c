@@ -9,9 +9,11 @@ int option = -1; //EDIT HERE TO SEE SOLUTIONS
 
 int simpleprimetest(GEN *num){
 	pari_printf("Pari Num: %Ps\n", *num);
-	cmpis()
+	if (cmpis(*num, (long)2) < 0) return 0;
+	if (cmpis(*num, (long)4) < 0) return 1;
+	if (mpodd(*num)) return 1;
 
-	return 1;
+	return 0;
 }
  
 int main(int argc, char* argv[])
@@ -23,7 +25,7 @@ int main(int argc, char* argv[])
     while (fscanf(fp, "%s", n_str) != EOF) {
 	    printf("%s: aks output\n", n_str);
 	    GEN n = strtoi(n_str);
-	    simpleprimetest(&n);
+	    printf("OUTPUT: %d\n", simpleprimetest(&n));
 	}
     printf("Total Elapsed Time: %f\n", 
 	   (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
