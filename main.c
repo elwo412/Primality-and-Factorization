@@ -53,7 +53,8 @@ int smallestR(GEN n){
 	int r, k;
 
 	//printf("|> STACK SIZE: %d\n", (top-avma)/sizeof(long));
-
+	
+	// > Start r at log2(n)^2
 	for (r = 2; next_r && cmpis(max_r, r) > 0; r++){
 		pari_sp btop = avma;
 		next_r = 0;
