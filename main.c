@@ -41,6 +41,7 @@ int aks(GEN n) {
 	//findsmallestR()
 	
 	//(step 5) Can run equalities, 'a' in the range described, in parallel!!
+	//Note: all equalities over range must be true, otherwise composite
 
 	return -1;
 }
