@@ -45,7 +45,7 @@ int aks(GEN n) {
 
 int smallestR(GEN n){
 	ltop = avma;
-	GEN log2n_val = gdiv(glog(n, FASTPRECISION), glog(gen_2,FASTPRECISION));
+	GEN log2n_val = gdiv(glog(n, FASTPRECISION), constlog2(FASTPRECISION));
 	GEN max_k = mpfloor(gpow(log2n_val, GEN2, FASTPRECISION));
 	GEN max_r = gmax(GEN3, mpceil(gpow(log2n_val, GEN5, FASTPRECISION)));
 	//pari_printf("max_k: %Ps | max_r: %Ps\n", max_k, max_r);
@@ -59,12 +59,19 @@ int smallestR(GEN n){
 		next_r = 0;
 		for (k=1; !next_r && cmpis(max_k, k) >= 0; k++){
 			pari_sp btop = avma;
-			next_r = equalis(Fp_pow(n, stoi(k), stoi(r)), 1) || equalis(Fp_pow(n, stoi(k), stoi(r)), 0) ;  //Fp_pow may be a huge time sink
-			if (gc_needed(btop, 1))
+			GEN k_t_INT = stoi(k);
+			GEN k_bit_vector = binary_zv(k_t_INT); //(converts t_INT to bit vector)
+			// GEN total;
+			// iterate over each bit b_i in vector
+			// 		if (b_i == 1) total *= n^(2^i)
+			// #(finally...)
+			// GEN modded_total = mod(total, r)
+			next_r = equalis(Fp_pow(n, k_t_INT, stoi(r)), 1) || equalis(Fp_pow(n, k_t_INT, stoi(r)), 0) ;  //Fp_pow may be a huge time sink
+			if (gc_needed(btop, 7))
 			  avma = btop;
 			//gmodgs(gpowgs(n, 200), 1429);
 		}
-		if (gc_needed(btop, 1))
+		if (gc_needed(btop, 7))
 	      avma = btop;
 	}
 	r--;
