@@ -38,6 +38,9 @@ int aks(GEN n) {
 	}
 
 	// (step 2) note: if r and n are not coprime, then skip this r
+	//findsmallestR()
+	
+	//(step 5) Can run equalities, 'a' in the range described, in parallel!!
 
 	return -1;
 }
