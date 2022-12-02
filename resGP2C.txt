@@ -1,0 +1,67 @@
+/*-*- compile-command: "cc -c -o gp_testing.gp.o -g -O3 -Wall -fomit-frame-pointer -fno-strict-aliasing -fPIC -I\"/usr/include/x86_64-linux-gnu\" gp_testing.gp.c && cc -o gp_testing.gp.so -shared -g -O3 -Wall -fomit-frame-pointer -fno-strict-aliasing -fPIC -Wl,-shared -Wl,-z,relro gp_testing.gp.o -lc -lm -L/usr/lib/x86_64-linux-gnu -lpari"; -*-*/
+#include <pari/pari.h>
+/*
+GP;install("init_gp_testing","vp","init_gp_testing","./gp_testing.gp.so");
+*/
+void init_gp_testing(long prec);
+/*End of prototype*/
+
+static GEN n;
+static GEN lg2;
+static GEN max_k;
+static GEN max_r;
+static GEN nextR;
+static GEN r;
+static GEN k;
+/*End of global vars*/
+
+void
+init_gp_testing(long prec)	  /* void */
+{
+  pari_sp ltop = avma;
+  n = pol_x(fetch_user_var("n"));
+  lg2 = pol_x(fetch_user_var("lg2"));
+  max_k = pol_x(fetch_user_var("max_k"));
+  max_r = pol_x(fetch_user_var("max_r"));
+  nextR = pol_x(fetch_user_var("nextR"));
+  r = pol_x(fetch_user_var("r"));
+  k = pol_x(fetch_user_var("k"));
+  n = readseq("2425967623052370772757633156976982469681");
+  lg2 = gdiv(glog(n, prec), glog(gen_2, prec));
+  max_k = gfloor(gsqr(lg2));
+  max_r = gmaxsg(3, gceil(gpowgs(lg2, 5)));
+  nextR = gen_1;
+  r = gen_2;
+  k = gen_1;
+  {
+    pari_sp btop = avma;
+    GEN i = gen_0;
+    for (i = gen_2; gcmp(i, max_r) <= 0; i = gaddgs(i, 1))
+    {
+      r = i;
+      if (gequal0(nextR) || (gcmp(i, max_r) >= 0))
+        break;
+      nextR = gen_0;
+      {
+        pari_sp btop = avma;
+        GEN j = gen_0;
+        for (j = gen_2; gcmp(j, max_k) <= 0; j = gaddgs(j, 1))
+        {
+          k = j;
+          if (gequal1(nextR) || (gcmp(j, max_k) > 0))
+            break;
+          nextR = stoi(gequal1(gmod(gpow(n, j, prec), i)) || gequal0(gmod(gpow(n, j, prec), i)));
+          if (gc_needed(btop, 1))
+            gerepileall(btop, 3, &nextR, &k, &j);
+        }
+      }
+      if (gc_needed(btop, 1))
+        gerepileall(btop, 4, &nextR, &r, &k, &i);
+    }
+  }
+  r = gsubgs(r, 1);
+  pari_printf("%Ps\n", r);
+  gerepileall(ltop, 7, &n, &lg2, &max_k, &max_r, &nextR, &r, &k);
+  return;
+}
+

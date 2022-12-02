@@ -268,6 +268,7 @@ int aks (mpz_t n)
   if (mpz_perfect_power_p(n)) {
     return COMPOSITE;
   }
+  //return -1; //TAKE OUT (for debugging purposes)
   /* Step 2: witness search */
   mpz_t r;
   mpz_init_set_ui(r, 2);
@@ -464,12 +465,9 @@ int main (int argc, char* argv[])
   mpz_init(n);
   clock_t t_start = clock();
   while (fscanf(fp, "%s", n_str) != EOF) {
-    clock_t start = clock();
     mpz_set_str(n, n_str, 10);
     gmp_printf("%Zd: ", n);
     printf("%d\n", aks(n));
-    printf("Time: %f\n", 
-	   (double)(clock() - start) / (double)CLOCKS_PER_SEC);
   }
   printf("Total Elapsed Time: %f\n", 
 	   (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
