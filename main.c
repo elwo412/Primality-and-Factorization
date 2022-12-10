@@ -5,6 +5,8 @@ GEN GEN2;
 GEN GEN3;
 GEN GEN5;
 
+GEN log2n_val;
+
 pari_sp ltop, top;
 
 bool initprimetest(unsigned int n)
@@ -38,94 +40,57 @@ int aks(GEN n) {
 	}
 
 	// (step 2) note: if r and n are not coprime, then skip this r
-	//findsmallestR()
+	GEN r = smallestR(n);
+
+	// (step 3) //only relevant when n <  5690034
+	if (divisibility_check(n, r)) return COMPOSITE;
+
+	// (step 4)
+	if (gcmp(n,r) < 1) return COMPOSITE;
 	
 	//(step 5) Can run equalities, 'a' in the range described, in parallel!!
 	//Note: all equalities over range must be true, otherwise composite
+	log2n_val
 
 	return -1;
 }
 
-
-int smallestR(GEN n){
-	ltop = avma;
-	GEN log2n_val = gdiv(glog(n, FASTPRECISION), constlog2(FASTPRECISION));
-	GEN max_k = mpfloor(gpow(log2n_val, GEN2, FASTPRECISION));
-	GEN max_r = gmax(GEN3, mpceil(gpow(log2n_val, GEN5, FASTPRECISION)));
-	//pari_printf("max_k: %Ps | max_r: %Ps\n", max_k, max_r);
-	int next_r = 1;
-	int r, k;
-
-	//printf("|> STACK SIZE: %d\n", (top-avma)/sizeof(long));
-	
-	// > Start r at log2(n)^2
-	for (r = 2; next_r && cmpis(max_r, r) > 0; r++){
-		pari_sp btop = avma;
-		next_r = 0;
-		for (k=1; !next_r && cmpis(max_k, k) >= 0; k++){
-			pari_sp btop = avma;
-			GEN k_t_INT = stoi(k);
-			GEN k_bit_vector = binary_zv(k_t_INT); //(converts t_INT to bit vector)
-			// GEN total;
-			// iterate over each bit b_i in vector
-			// 		if (b_i == 1) total *= n^(2^i)
-			// #(finally...)
-			// GEN modded_total = mod(total, r)
-			next_r = equalis(Fp_pow(n, k_t_INT, stoi(r)), 1) || equalis(Fp_pow(n, k_t_INT, stoi(r)), 0) ;  //Fp_pow may be a huge time sink
-			if (gc_needed(btop, 7))
-			  avma = btop;
-			//gmodgs(gpowgs(n, 200), 1429);
-		}
-		if (gc_needed(btop, 7))
-	      avma = btop;
+int divisibility_check(GEN n, GEN r) {
+	GEN bound = gmin(gsubgs(n, 1), r);
+	GEN a = GEN2;
+	while (cmpii(a, bound) < 1){
+		if (dvdii(n,a)) return COMPOSITE;
+		a = gaddgs(a, 1);
 	}
-	r--;
-
-	//printf("Final R val: %d\n", r);
-	avma = ltop;
-	return r; //CHANGE (placeholder for now)
+	return 0;
 }
 
-/* //UNGODLY SLOW
 GEN smallestR(GEN n){
-	ltop = avma;
-	GEN lg2 = gdiv(glog(n, FASTPRECISION), glog(gen_2, FASTPRECISION));
-	GEN max_k = gfloor(gsqr(lg2));
-	GEN max_r = gmaxsg(3, gceil(gpowgs(lg2, 5)));
-	GEN nextR = gen_1;
-	GEN r = gen_2;
-	GEN k = gen_1;
-	{
-	  pari_sp btop = avma;
-	  GEN i = gen_0;
-	  for (i = gen_2; gcmp(i, max_r) <= 0; i = gaddgs(i, 1))
-	  {
-	    r = i;
-	    if (gequal0(nextR) || (gcmp(i, max_r) >= 0))
-	      break;
-	    nextR = gen_0;
-	    {
-	      pari_sp btop = avma;
-	      GEN j = gen_0;
-	      for (j = gen_2; gcmp(j, max_k) <= 0; j = gaddgs(j, 1))
-	      {
-	        k = j;
-	        if (gequal1(nextR) || (gcmp(j, max_k) > 0))
-	          break;
-	        nextR = stoi(gequal1(gmod(gpow(n, j, FASTPRECISION), i)) || gequal0(gmod(gpow(n, j, FASTPRECISION), i)));
-	        if (gc_needed(btop, 1))
-	          gerepileall(btop, 3, &nextR, &k, &j);
-	      }
-	    }
-	    if (gc_needed(btop, 1))
-	      gerepileall(btop, 4, &nextR, &r, &k, &i);
-	  }
+	log2n_val = gdiv(glog(n, DEFAULTPREC), constlog2(DEFAULTPREC));
+
+	GEN r = mpceil(gpowgs(log2n_val,2));
+	GEN k = GEN2;
+	GEN max_k = mpfloor(gpow(log2n_val, GEN2, DEFAULTPREC));
+	GEN max_r = gmax(GEN3, mpceil(gpow(log2n_val, GEN5, DEFAULTPREC)));
+
+	GEN modd;
+
+	r = gaddgs(r, 1);
+
+	while (cmpii(k, max_k) < 1){
+		if (gequal1(ggcd(n, r))){
+			modd = gmodulo(n, r);
+			k = znorder(modd, NULL);
+		}
+		//pari_printf("k=%Ps\n", k);
+		r = gaddgs(r, 1);
+		//if (cmpii(r, max_r) == 1) break; // <-- is this needed??
 	}
+	if (cmpii(r, max_r) == 1) { printf("Error: r > log2(n)^5\n"); raise(SIGINT);}
 	r = gsubgs(r, 1);
-	pari_printf("%Ps\n", r);
-	gerepileall(ltop, 7, &n, &lg2, &max_k, &max_r, &nextR, &r, &k);
+
 	return r;
-} */
+}
 
 //ulong tridiv_bound(GEN n) returns the trial division bound used by Z_factor(n). !!Useful!!
  
@@ -141,8 +106,8 @@ int main(int argc, char* argv[])
     clock_t t_start = clock();
     while (fscanf(fp, "%s", n_str) != EOF) {
 	    GEN n = strtoi(n_str);
-	    //printf("%s: %d\n", n_str, aks(n));
-	    printf("\n%s: %d", n_str, smallestR(n));
+	    printf("%s: %d\n", n_str, aks(n));
+	    //n = stoi(89);
 	    //printf("Fully proven answer: %d\n", isprime(n));
 	}
     printf("Total Elapsed Time: %f\n", (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);

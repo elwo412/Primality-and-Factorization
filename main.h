@@ -15,14 +15,15 @@
 // Allocation type
 typedef enum n_type
 {
-    COMPOSITE = 0,
-    PRIME = 1,
+    COMPOSITE = 1,
+    PRIME = 0,
 };
 
 // APIs
 bool initprimetest(unsigned int n);
 int aks(GEN n);
-int smallestR(GEN n);
+GEN smallestR(GEN n);
+int divisibility_check(GEN n, GEN r);
 int main(int argc, char* argv[]);
 
 #endif
