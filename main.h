@@ -1,11 +1,11 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <iostream>
 #include <pari/pari.h>
-#include <cmath>
+//#include <cmath>
 
 // Macros
 #ifndef MY_EXTERNAL_DEFINE
@@ -35,7 +35,6 @@ typedef struct {
 } simple_struct;
 
 // APIs
-bool initprimetest(unsigned int n);
 int aks(GEN n);
 GEN smallestR(GEN n);
 int divisibility_check(GEN n, GEN r);

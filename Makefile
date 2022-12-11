@@ -1,4 +1,4 @@
-CC = g++
+CC = gcc
 CFLAGS = -g -Wall
 TARGET = main
 HEADERS = defs.h
