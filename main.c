@@ -91,6 +91,7 @@ int step5_rename(GEN n, GEN r){
 	GEN p_2 = FpXQ_pow(x, stoi(1), q, n);
 
 	while (cmpii(a, bound) < 1){
+		GEN offset = gen_1;
 		GEN n_t = n;
 		GEN p;
 		p = FpXQ_pow(gadd(x, a), stoi(1), q, n);
@@ -98,8 +99,8 @@ int step5_rename(GEN n, GEN r){
 		while (!gequal0(n_t)){
 			if (gequal1(n_t)){
 				//pari_printf("res %Ps\n", gsub(n, gpow(gen_2,mpfloor(log2n_val), DEFAULTPREC)));
-            	p = FpXQ_mul(p,FpXQ_pow(gadd(x, a), gen_1, q, n), q, n);
-            	if (!pp2) pp2 = FpXQ_mul(p_2,FpXQ_pow(x, gen_1, q, n), q, n);
+            	p = FpXQ_mul(p,FpXQ_pow(gadd(x, a), gsub(n,offset), q, n), q, n);
+            	if (!pp2) pp2 = FpXQ_mul(p_2,FpXQ_pow(x, gsub(n,offset), q, n), q, n);
 
             	p_2 = gadd(pp2, a);
             	break;
@@ -111,6 +112,7 @@ int step5_rename(GEN n, GEN r){
             //pari_printf("n_t: %Ps\n", n_t);
             //pari_printf("p: %Ps\n", p);
 			n_t = mpshift(n_t, -1);
+			offset = gmul(offset,gen_2);
 			//pari_printf("n_t: %Ps\n", n_t);
 		}
 		//pari_printf("\np: %Ps\n", p);
