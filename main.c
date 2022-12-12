@@ -144,6 +144,9 @@ int step5_rename(GEN n, GEN r){
 		}
 
 		pari_printf("RESULTS: %Ps | ", return_results);
+
+		if (return_results) return COMPOSITE;
+
 		//pthread_mutex_destroy(&mutex_);
 
 		

@@ -30,10 +30,6 @@ typedef struct {
     int *results;
 } c_arg_package;
 
-typedef struct {
-    int *t;
-} simple_struct;
-
 // APIs
 int aks(GEN n);
 GEN smallestR(GEN n);
