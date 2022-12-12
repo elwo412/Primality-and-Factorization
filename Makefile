@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -g -Wall
 TARGET = main
 HEADERS = defs.h
-LIB = -lpari -lpthread
+LIB = -lpari -lpthread -lm
 BENCH = benchmark
 
 all: $(TARGET)

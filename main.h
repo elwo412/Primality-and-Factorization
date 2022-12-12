@@ -5,7 +5,7 @@
 //#include <stdlib.h>
 //#include <iostream>
 #include <pari/pari.h>
-//#include <cmath>
+#include <math.h>
 
 // Macros
 #ifndef MY_EXTERNAL_DEFINE
