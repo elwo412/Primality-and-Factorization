@@ -1,63 +1,29 @@
-#include <pari/pari.h> /* Include PARI headers */
+#include <pari/pari.h>
 
-#include <pthread.h>   /* Include POSIX threads headers */
-
-void *
-mydet(void *arg)
-{
-  GEN F, M;
-  /* Set up thread stack and get thread parameter */
-  M = pari_thread_start((struct pari_thread*) arg);
-  F = det(M);
-  /* Free memory used by the thread */
-  pari_thread_close();
-  return (void*)F;
-}
-
-void *
-myfactor(void *arg)  /* same principle */
-{
-  GEN F, N;
-  N = pari_thread_start((struct pari_thread*) arg);
-  F = factor(N);
-  pari_thread_close();
-  return (void*)F;
-}
+long
+isprimeSelfridge(GEN x) { return (plisprime(x,0)==gen_1); }
 
 int
-main(void)
+BSW_isprime(GEN x)
 {
-  GEN M,N1,N2,F2,D;
-  GEN res;
-  pthread_t th1, th2, th3; /* POSIX-thread variables */
-  struct pari_thread pth1, pth2, pth3; /* pari thread variables */
+  pari_sp av = avma;
+  long l, res;
+  GEN F, p, e;
 
-  /* Initialise the main PARI stack and global objects (gen_0, etc.) */
-  pari_init(4000000,500000);
-  /* Compute in the main PARI stack */
-  N1 = addis(int2n(256), 1); /* 2^256 + 1 */
-  N2 = subis(int2n(193), 1); /* 2^193 - 1 */
-  M = mathilbert(80);
-  /* Sync with main thread */
-  pari_thread_sync();
-  /* Allocate pari thread structures */
-  pari_thread_alloc(&pth1,4000000,N1);
-  pari_thread_alloc(&pth2,4000000,N2);
-  pari_thread_alloc(&pth3,4000000,M);
-  /* pthread_create() and pthread_join() are standard POSIX-thread
-   * functions to start and get the result of threads. */
-  pthread_create(&th1,NULL, &myfactor, (void*)&pth1);
-  pthread_create(&th2,NULL, &myfactor, (void*)&pth2);
-  pthread_create(&th3,NULL, &mydet,    (void*)&pth3); /* Start 3 threads */
-  GEN F1;
-  pthread_join(th1,(void*)&F1);
-  pthread_join(th2,(void*)&F2);
-  pthread_join(th3,(void*)&D); /* Wait for termination, get the results */
-  pari_printf("F1=%Ps\nF2=%Ps\nlog(D)=%Ps\n", F1, F2, glog(D,3));
-  res = gcopy(F1);
-  pari_thread_free(&pth1);
-  pari_thread_free(&pth2);
-  pari_thread_free(&pth3); /* clean up */
-  pari_printf("%Ps\n", res);
-  return 0;
+  if (BSW_isprime_small(x)) return 1;
+  F = auxdecomp((addsi(-(1),(x))), 0);
+  l = ((long)(((pari_ulong*)((((GEN*) (F))[1])))[0] & ((1UL<<((1L<<(2 +3)) - 1 - 7))-1)))-1; p = (((GEN**)(F))[1][l]); e = (((GEN**)(F))[2][l]); F=(((GEN*) (F))[1]);
+  if (cmpii(powgi(p, shifti(e,1)), x)<0)
+    res = isprimeSelfridge(mkvec2(x,vecslice(F,1,l-1)));
+  else if (BSW_psp(p))
+    res = isprimeSelfridge(mkvec2(x,F));
+  else
+    res = isprimeAPRCL(x);
+  avma = av; return res;
+}
+
+long
+isprime(GEN x)
+{
+  return BSW_psp(x) && BSW_isprime(x);
 }

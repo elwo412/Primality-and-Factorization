@@ -66,6 +66,26 @@ void *compute_equality(void *args) {
 	return (void *)F;
 }
 
+GEN AND(GEN x, GEN y) {
+long i, lx, ly, lout;
+long *xp, *yp, *outp; /* mantissa pointers */
+GEN out;
+if (!signe(x) || !signe(y)) return gen_0;
+lx = lgefint(x); xp = int_LSW(x);
+ly = lgefint(y); yp = int_LSW(y); lout = min(lx,ly); /* > 2 */
+out = cgeti(lout); out[1] = evalsigne(1) | evallgefint(lout);
+outp = int_LSW(out);
+for (i=2; i < lout; i++)
+{
+*outp = (*xp) & (*yp);
+outp = int_nextW(outp);
+xp = int_nextW(xp);
+yp = int_nextW(yp);
+}
+if ( !*int_MSW(out) ) out = int_normalize(out, 1);
+return out;
+}
+
 
 int step5_rename(GEN n, GEN r){
 	GEN bound = mpfloor(gmul(gsqrt(eulerphi(r), DEFAULTPREC),log2n_val));
@@ -77,8 +97,7 @@ int step5_rename(GEN n, GEN r){
 
 	GEN return_results = gen_0;
 
-	if (cmpii(n, stoi(5000000)) == 1){
-		
+	if (cmpii(n, stoi(1000000)) == 1){
 		//threaded approach
 		max_thread = 16;
 		int count = 0;
@@ -132,8 +151,40 @@ int step5_rename(GEN n, GEN r){
 		
 	}else{
 		while (cmpii(a, bound) < 1){
-			GEN p = FpXQ_pow(gadd(x, a), n, q, n); //SUCCESSIVE SQUARING USING: FpXQ_mul?
-			GEN p_2 = gadd(FpXQ_pow(x, n, q, n), a);
+			GEN p, p_2;
+
+			GEN p_base;
+			GEN p_poly = pol_x(0);
+			GEN n_t = n;
+			GEN offset = gen_1;
+
+			while (!gequal0(n_t)){
+				if (*(long *)int_MSW(n_t) & 1){
+						//pari_printf("res %Ps\n", gsub(n, gpow(gen_2,mpfloor(log2n_val), DEFAULTPREC)));
+						p_base = FpXQ_pow(gadd(x, a), gsub(n,offset), q, n);
+		            	p = FpXQ_mul(p, p_base, q, n);
+		            	break;
+	            	}
+	            p = FpXQ_mul(p_poly, p_poly, q, n); //RgXQ_powu(p, 2, q);
+	            //p_2 = gadd(FpXQ_mul(x_t, x_t, q, n), a);
+	            //pari_printf("n_t: %Ps\n", n_t);
+	            //pari_printf("p: %Ps\n", p);
+				n_t = mpshift(n_t, -1);
+				offset = gmul(offset,gen_2);
+				//pari_printf("n_t: %Ps\n", n_t);
+			}
+			pari_printf("\np: %Ps\n", p);
+			p = FpXQ_pow(gadd(x, a), n, q, n); //SUCCESSIVE SQUARING USING: FpXQ_mul?
+			pari_printf("p: %Ps\n", p);
+			//p_2 = gadd(FpXQ_pow(x_t, n, q, n), a);
+
+			raise(SIGINT);
+			
+
+
+			p = FpXQ_pow(gadd(x, a), n, q, n); //As defined in paper
+			//p_2 = gadd(FpXQ_pow(x, n, q, n), a); //As defined in paper
+			p_2 = gadd(gpow(x, gmod(n, r), DEFAULTPREC), a); /* X ^ (n % r) */
 			
 			// Check if p and p_2 are equal
 			int res = gequal(p, p_2);
@@ -141,6 +192,7 @@ int step5_rename(GEN n, GEN r){
 				return COMPOSITE;
 			a = gaddgs(a, 1);
 		}
+		//raise(SIGINT);
 	}
 	///* //MVP
 	

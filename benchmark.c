@@ -20,7 +20,7 @@
 
 typedef struct {
   mpz_t table;
-  unsigned int size;		/* Bit set 1: composite */
+  unsigned int size;    /* Bit set 1: composite */
 } Sieve;
 
 
@@ -53,7 +53,7 @@ int sieve_primality_test (unsigned int n, Sieve* p_sieve)
     if (mpz_tstbit(p_sieve->table, i) == 0) {
       unsigned int j;
       for (j = i * 2; j <= p_sieve->size; j += i) {
-	mpz_setbit(p_sieve->table, j);
+  mpz_setbit(p_sieve->table, j);
       }
     }
   }
@@ -146,7 +146,7 @@ int is_equal_polynomial (Polynomial* p_poly0, Polynomial* p_poly1)
 
 
 inline void get_polynomial_coef (mpz_t* p_coef, 
-				 Polynomial* p_poly, unsigned int order)
+         Polynomial* p_poly, unsigned int order)
 {
   if (order > p_poly->deg) {
     mpz_init_set_ui(*p_coef, 0);
@@ -158,7 +158,7 @@ inline void get_polynomial_coef (mpz_t* p_coef,
 
 
 void set_polynomial_coef (Polynomial* p_poly, unsigned int order, 
-			  mpz_t* p_coef)
+        mpz_t* p_coef)
 {
   if (order <= p_poly->deg) {
     mpz_set(p_poly->coef[order], *p_coef);
@@ -176,7 +176,7 @@ void set_polynomial_coef (Polynomial* p_poly, unsigned int order,
 
 
 void set_polynomial_coef_si (Polynomial* p_poly, unsigned int order, 
-			     int coef_si)
+           int coef_si)
 {
   if (order <= p_poly->deg) {
     mpz_set_si(p_poly->coef[order], coef_si);
@@ -194,8 +194,8 @@ void set_polynomial_coef_si (Polynomial* p_poly, unsigned int order,
 
 
 void polynomial_modular_multiplication (Polynomial** pp_poly_res, 
-					Polynomial* p_poly0, Polynomial* p_poly1, 
-					mpz_t n, unsigned int r)
+          Polynomial* p_poly0, Polynomial* p_poly1, 
+          mpz_t n, unsigned int r)
 {
   unsigned int max_output_deg = p_poly0->deg + p_poly1->deg < r? 
     p_poly0->deg + p_poly1->deg: r - 1;
@@ -203,7 +203,7 @@ void polynomial_modular_multiplication (Polynomial** pp_poly_res,
   mpz_t coef;
   mpz_init(coef);
   unsigned int i;
-  for (i = 0; i < r; i++) {	/* For every result coefficient */
+  for (i = 0; i < r; i++) { /* For every result coefficient */
     mpz_set_ui(coef, 0);
     mpz_t c0, c1;
     mpz_init(c0);
@@ -215,7 +215,7 @@ void polynomial_modular_multiplication (Polynomial** pp_poly_res,
       get_polynomial_coef(&c0, p_poly0, j);
       get_polynomial_coef(&c1, p_poly1, i - j);
       mpz_mul(c0, c0, c1);
-      mpz_add(coef, c0, coef);	/* coef += c0 * c1 */
+      mpz_add(coef, c0, coef);  /* coef += c0 * c1 */
     }
     jmin = i + r - p_poly1->deg;
     jmax = p_poly0->deg;
@@ -223,11 +223,11 @@ void polynomial_modular_multiplication (Polynomial** pp_poly_res,
       get_polynomial_coef(&c0, p_poly0, j);
       get_polynomial_coef(&c1, p_poly1, i + r - j);
       mpz_mul(c0, c0, c1);
-      mpz_add(coef, c0, coef);	/* coef += c0 * c1 */
+      mpz_add(coef, c0, coef);  /* coef += c0 * c1 */
     }
     mpz_clear(c0);
     mpz_clear(c1);
-    mpz_mod(coef, coef, n);	/* coef = coef % n */
+    mpz_mod(coef, coef, n); /* coef = coef % n */
     if (mpz_cmp_ui(coef, 0) != 0) {
       set_polynomial_coef((*pp_poly_res), i, &coef);
     }
@@ -240,7 +240,7 @@ void polynomial_modular_multiplication (Polynomial** pp_poly_res,
 
 /* Compute ((*p_poly_base) ^ n) % (X ^ r - 1) */
 void polynomial_modular_power (Polynomial** pp_poly_res, Polynomial* p_poly_base, 
-			       mpz_t n, unsigned int r)
+             mpz_t n, unsigned int r)
 {
   initialize_polynomial(pp_poly_res, 0);
   set_polynomial_coef_si((*pp_poly_res), 0, 1);
@@ -276,11 +276,11 @@ int aks (mpz_t n)
   unsigned int logn_ui = mpz_sizeinbase(n, 2);
   mpz_t logn;
   mpz_init_set_ui(logn, logn_ui);
-  mpz_t imax;			/* Upper bound of i = 4 * logn ^ 2*/
+  mpz_t imax;     /* Upper bound of i = 4 * logn ^ 2*/
   mpz_init(imax);
   mpz_mul(imax, logn, logn);
   mpz_mul_ui(imax, imax, 4);
-  Sieve sieve;			/* Sieve of Eratosthenes */
+  Sieve sieve;      /* Sieve of Eratosthenes */
   initialize_sieve(&sieve);
   while (mpz_cmp(r, n) < 0) {
     if (mpz_divisible_p(n, r)) {
@@ -297,17 +297,17 @@ int aks (mpz_t n)
       mpz_t i;
       mpz_init_set_ui(i, 1);
       while (mpz_cmp(i, imax) <= 0) {
-	mpz_powm(pwm, n, i, r);
-	if (mpz_cmp_ui(pwm, 1) != 0) {
-	  is_break = 1;
-	  break;
-	}
-	mpz_add_ui(i, i, 1);
+  mpz_powm(pwm, n, i, r);
+  if (mpz_cmp_ui(pwm, 1) != 0) {
+    is_break = 1;
+    break;
+  }
+  mpz_add_ui(i, i, 1);
       }
       mpz_clear(pwm);
       mpz_clear(i);
       if (is_break) {
-	break;
+  break;
       }
     }
     mpz_add_ui(r, r, 1);
@@ -321,7 +321,7 @@ int aks (mpz_t n)
     return PRIME;
   }
   /* Step 3: polynomial check */
-  mpz_t amax;			/* Upper bound of a = 2 * sqrt(r) * logn */
+  mpz_t amax;     /* Upper bound of a = 2 * sqrt(r) * logn */
   mpz_init_set_ui(amax, 2);
   mpz_t sqrtr;
   mpz_init(sqrtr);
@@ -386,28 +386,28 @@ int aks (mpz_t n)
       mpz_t a;
       mpz_init(a);
       mpz_mul_ui(a, b, THREAD_NUM);
-      mpz_add_ui(a, a, c);		/* a = b * THREAD_NUM + c */
+      mpz_add_ui(a, a, c);    /* a = b * THREAD_NUM + c */
       if (mpz_cmp(a, amax) <= 0) {
-	mpz_t a_mod_n;
-	mpz_init(a_mod_n);
-	mpz_mod(a_mod_n, a, n);
-	Polynomial* p_poly_right;
-	Polynomial* p_poly_left;
-	Polynomial* p_poly_left_base;
-	initialize_polynomial(&p_poly_right, power_right_ui);
-	set_polynomial_coef_si(p_poly_right, power_right_ui, 1);
-	set_polynomial_coef(p_poly_right, 0, &a_mod_n);
-	initialize_polynomial(&p_poly_left_base, 1);
-	set_polynomial_coef_si(p_poly_left_base, 1, 1);
-	set_polynomial_coef(p_poly_left_base, 0, &a);
-	polynomial_modular_power(&p_poly_left, p_poly_left_base, n, r_ui);
-	if (!is_equal_polynomial(p_poly_left, p_poly_right)) {
-	  is_returns[c] = 1;
-	}
-	mpz_clear(a_mod_n);
-	destroy_polynomial(&p_poly_right);
-	destroy_polynomial(&p_poly_left);
-	destroy_polynomial(&p_poly_left_base);
+  mpz_t a_mod_n;
+  mpz_init(a_mod_n);
+  mpz_mod(a_mod_n, a, n);
+  Polynomial* p_poly_right;
+  Polynomial* p_poly_left;
+  Polynomial* p_poly_left_base;
+  initialize_polynomial(&p_poly_right, power_right_ui);
+  set_polynomial_coef_si(p_poly_right, power_right_ui, 1);
+  set_polynomial_coef(p_poly_right, 0, &a_mod_n);
+  initialize_polynomial(&p_poly_left_base, 1);
+  set_polynomial_coef_si(p_poly_left_base, 1, 1);
+  set_polynomial_coef(p_poly_left_base, 0, &a);
+  polynomial_modular_power(&p_poly_left, p_poly_left_base, n, r_ui);
+  if (!is_equal_polynomial(p_poly_left, p_poly_right)) {
+    is_returns[c] = 1;
+  }
+  mpz_clear(a_mod_n);
+  destroy_polynomial(&p_poly_right);
+  destroy_polynomial(&p_poly_left);
+  destroy_polynomial(&p_poly_left_base);
       }
       mpz_clear(a);
     }
@@ -470,7 +470,7 @@ int main (int argc, char* argv[])
     printf("%d\n", aks(n));
   }
   printf("Total Elapsed Time: %f\n", 
-	   (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
+     (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
   mpz_clear(n);
   fclose(fp);
   return 0;

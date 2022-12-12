@@ -7,10 +7,10 @@ BENCH = benchmark
 
 all: $(TARGET)
 $(TARGET): $(TARGET).c
-	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).c $(LIB)
+	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).c $(LIB) -fopenmp
 
 clean:
 	rm $(TARGET) $(BENCH)
 
 benchmark:
-	$(CC) $(CFLAGS) -o $(BENCH) $(BENCH).c -lgmp
+	g++ $(CFLAGS) -o $(BENCH) $(BENCH).c -lgmp
