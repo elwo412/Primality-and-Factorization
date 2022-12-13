@@ -21,6 +21,7 @@ int td(ZZ n, long bound){
    return PRIME;
 }
 
+//slower than pari
 int step5(ZZ n, long r, long bound){
 
    //'binary' form
@@ -54,7 +55,7 @@ int step5(ZZ n, long r, long bound){
       ZZ_pX pPoly(1, 1); //X
       pPoly += a; //X + a
 
-      //NEED TO IMPLEMENT SUCCESSIVE SQUARING
+      //SUCCESSIVE SQUARING (way slower)
       /*
       ZZ_pX temp = ZZ_pX(pPoly);
       int k = 0;
@@ -74,24 +75,8 @@ int step5(ZZ n, long r, long bound){
       }
       */
       PowerMod(pPoly, pPoly, c_n, qmod); //(X + a)^n % X^r - 1
-      //cout << "[final] LEADING DEG: " << deg(pPoly) << endl;
-
       SetCoeff(p_2Poly, 0, a);
-
-
-      
       if (pPoly != p_2Poly) return COMPOSITE;
-
-
-      //GEN p, p_2;
-      //p = FpXQ_pow(gadd(x, a), n, q, n); //As defined in paper
-      //p_2 = gadd(FpXQ_pow(x, n, q, n), a); //As defined in paper
-      ////p_2 = gadd(gpow(x, gmod(n, r), DEFAULTPREC), a); /* X ^ (n % r) */
-      
-      //// Check if p and p_2 are equal
-      //int res = gequal(p, p_2);
-      //if (!res)
-      //   return COMPOSITE;
       a += 1;
    }
 
