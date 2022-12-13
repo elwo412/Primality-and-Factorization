@@ -26,7 +26,7 @@ typedef struct {
 } c_arg_package;
 
 // APIs
-int td(NTL::ZZ n);
+int td(NTL::ZZ n, long bound);
 int aks(NTL::ZZ n, char *n_pari);
 int step5(NTL::ZZ n, long r, long bound);
 

@@ -6,15 +6,13 @@ extern "C" {
 using namespace std;
 using namespace NTL;
 
-int td(ZZ n){
+int td(ZZ n, long bound){
    //trial division
    PrimeSeq s;  // generates primes in sequence quickly
    long p;
 
-   int tdbound = 300; //bound for trial division, unsure exactly what bound is appropriate
-
    p = s.next();  // first prime is always 2
-   while (p && p < tdbound) {
+   while (p && p < bound-1) {
       if ((n % p) == 0) return COMPOSITE;
       p = s.next();  
    }
@@ -48,16 +46,14 @@ int step5(ZZ n, long r, long bound){
       ZZX p_2;
       p_2 = ZZX(INIT_MONO, 1, r);
 
-      p_2Poly += a; // X^n + a
+      //p_2Poly += a; // X^n + a
 
       ZZ_pX pPoly(1, 1); //X
       pPoly += a; //X + a
       //NEED TO IMPLEMENT SUCCESSIVE SQUARING
       PowerMod(pPoly, pPoly, n, qmod); //(X + a)^n % X^r - 1
 
-      //cout << (pPoly == p_2Poly) << endl;
-
-      if (pPoly != p_2Poly) return COMPOSITE;
+      if (pPoly != (p_2Poly + a)) return COMPOSITE;
 
 
       //GEN p, p_2;
@@ -107,9 +103,10 @@ int main(int argc, char* argv[])
    FILE* fp = fopen(argv[1], "r");
    print_test();
    clock_t t_start = clock();
+   long ln;
    while (fscanf(fp, "%s", n_str) != EOF) {
       ZZ n = conv<ZZ>(n_str);
-      if (n < 100) cout << "TD| " << n << ": " << td(n) << endl;
+      if (n < 100) {ln = strtol(n_str,NULL,10); cout << "TD| " << n << ": " << td(n, ln) << endl; }
       else
          cout << "AKS| " << n << ": " << aks(n, n_str) << endl;
    }
