@@ -207,8 +207,6 @@ GEN smallestR(GEN n){
 	if (cmpii(r, max_r) == 1) { printf("Error: r > log2(n)^5\n"); raise(SIGINT);}
 	r = gsubgs(r, 1);
 
-	pari_printf("R: %Ps\n", r);
-
 	return r;
 }
 

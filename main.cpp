@@ -22,10 +22,12 @@ int td(ZZ n, long bound){
 }
 
 int step5(ZZ n, long r, long bound){
-   ZZ_p::init(ZZ(n));
 
    //'binary' form
-   ZZ n_bits = ZZ(n);
+   //ZZ n_bits = ZZ(n);
+
+   const ZZ c_n = ZZ(n);
+   ZZ_p::init(ZZ(c_n));
 
    long a = 2;
 
@@ -37,12 +39,12 @@ int step5(ZZ n, long r, long bound){
    const ZZ_pXModulus qmod(q);
 
    ZZ_pX p_2Poly(1, 1); //X
-   PowerMod(p_2Poly, p_2Poly, n, qmod); //X^n % X^r - 1
-   p_2Poly += 2;
+   PowerMod(p_2Poly, p_2Poly, c_n, qmod); //X^n % X^r - 1
+   p_2Poly += a;
 
    ZZ_pX p_2Polycmp;
 
-   cout << bound << endl;
+   //cout << bound << endl;
 
 
    while (a <= bound){
@@ -52,9 +54,9 @@ int step5(ZZ n, long r, long bound){
       ZZ_pX pPoly(1, 1); //X
       pPoly += a; //X + a
 
-      ZZ_pX temp = ZZ_pX(pPoly);
       //NEED TO IMPLEMENT SUCCESSIVE SQUARING
-      ///*
+      /*
+      ZZ_pX temp = ZZ_pX(pPoly);
       int k = 0;
       long size_n_bits = NumBits(n);
       //ZZ_pX *cached = (ZZ_pX *)malloc(sizeof(ZZ_pX)*size_n_bits);
@@ -70,8 +72,8 @@ int step5(ZZ n, long r, long bound){
          //cout << "[temp] LEADING DEG: " << deg(temp) << endl;
          k++;
       }
-      //*/
-      //PowerMod(pPoly, pPoly, n, qmod); //(X + a)^n % X^r - 1
+      */
+      PowerMod(pPoly, pPoly, c_n, qmod); //(X + a)^n % X^r - 1
       //cout << "[final] LEADING DEG: " << deg(pPoly) << endl;
 
       SetCoeff(p_2Poly, 0, a);
@@ -131,9 +133,10 @@ int main(int argc, char* argv[])
    long ln;
    while (fscanf(fp, "%s", n_str) != EOF) {
       ZZ n = conv<ZZ>(n_str);
-      if (n < 10) {ln = strtol(n_str,NULL,10); cout << "TD| " << n << ": " << td(n, ln) << endl; }
-      else
-         cout << "AKS| " << n << ": " << aks(n, n_str) << endl;
+      //if (n < 10) {ln = strtol(n_str,NULL,10); cout << "TD| " << n << ": " << td(n, ln) << endl; }
+      //else
+      cout << "AKS| " << n << ": " << aks(n, n_str) << endl;
+      //ln = strtol(n_str,NULL,10); cout << "TD| " << n << ": " << td(n, ln) << endl;
    }
    printf("Total Elapsed Time: %f\n", (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
    pari_close();
