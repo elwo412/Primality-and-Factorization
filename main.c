@@ -91,7 +91,7 @@ int step5_rename(GEN n, GEN r){
 	GEN x = pol_x(0);
 
 	GEN q = gsub(FpX_powu(x, itos(r), n), stoi(1));
-	q = FpX_get_red(q, n);
+	//q = FpX_get_red(q, n);
 
 	GEN return_results = gen_0;
 
@@ -150,12 +150,12 @@ int step5_rename(GEN n, GEN r){
 		//pthread_mutex_destroy(&mutex_);
 
 		
-	}else{
+	}else{ clock_t t_start = clock();
 		while (cmpii(a, bound) < 1){
 			GEN p, p_2;
 			p = FpXQ_pow(gadd(x, a), n, q, n); //As defined in paper
-			//p_2 = gadd(FpXQ_pow(x, n, q, n), a); //As defined in paper
-			p_2 = gadd(gpow(x, gmod(n, r), DEFAULTPREC), a); /* X ^ (n % r) */
+			p_2 = gadd(FpXQ_pow(x, n, q, n), a); //As defined in paper
+			//p_2 = gadd(gpow(x, gmod(n, r), DEFAULTPREC), a); /* X ^ (n % r) */
 			
 			// Check if p and p_2 are equal
 			int res = gequal(p, p_2);
@@ -164,6 +164,7 @@ int step5_rename(GEN n, GEN r){
 			a = gaddgs(a, 1);
 		}
 		//raise(SIGINT);
+		printf("Step 5 Time: %f | ", (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
 	}
 	///* //MVP
 	
@@ -205,6 +206,8 @@ GEN smallestR(GEN n){
 	}
 	if (cmpii(r, max_r) == 1) { printf("Error: r > log2(n)^5\n"); raise(SIGINT);}
 	r = gsubgs(r, 1);
+
+	pari_printf("R: %Ps\n", r);
 
 	return r;
 }
@@ -255,11 +258,14 @@ int main(int argc, char* argv[])
     clock_t t_start = clock();
     while (fscanf(fp, "%s", n_str) != EOF) {
 	    GEN n = strtoi(n_str);
+	    /*
 	    int i_n = itos_or_0(n);
 	    if (i_n > 0 && i_n < 500000000)
 			printf("TD %s: %d\n", n_str, trial_division(itos(n)));
-	    else printf("AKS %s: %d\n", n_str, aks(n));
-	    //printf("Fully proven answer: %d\n", isprime(n));
+	    else*/ //clock_t t_n_start = clock();
+	    printf("AKS %s: %d\n", n_str, aks(n));
+	    //printf("AKS Time: %f\n\n", (double)(clock() - t_n_start) / (double)CLOCKS_PER_SEC);
+	    //printf(" | %d\n", isprime(n));
 	}
     printf("Total Elapsed Time: %f\n", (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
     fclose(fp);
