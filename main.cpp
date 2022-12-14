@@ -7,13 +7,13 @@ using namespace std;
 using namespace NTL;
 
 int current_mode;
-Mat<long> p_factors;
+Mat<ZZ> p_factors;
 int x_dim;
 const int y_dim = 2;
 
 NTL_CLIENT
 
-void update(long factor){
+void update(ZZ factor){
    for (int i=0; i < x_dim; i++){
       if (p_factors[i][0] == factor){
          p_factors[i][1] += 1;
@@ -22,8 +22,10 @@ void update(long factor){
    }
    x_dim++; 
    p_factors.SetDims(x_dim, y_dim);
+   ZZ _i;
+   _i = ZZ(1);
    p_factors[x_dim-1].put(0,factor);
-   p_factors[x_dim-1].put(1,1);
+   p_factors[x_dim-1].put(1,_i);
 
 }
 
@@ -44,67 +46,57 @@ long td_factorization(ZZ n, ZZ bound){
    PrimeSeq s;  // generates primes in sequence quickly
    long p;
    x_dim = 0;
-   p_factors = Mat<long>();
+   p_factors = Mat<ZZ>();
+
+   ZZ f_buf;
 
    p = s.next();  // first prime is always 2
    while (p && p <= bound) {
       int c = 1;
       while ((n % p) == 0){
-         update(p);
+         f_buf = ZZ(p);
+         update(f_buf);
          c++; //ha!
          n = n / p;
       }
       p = s.next();  
    }
 
-   //assumes 64-bit system
-   if (NumBits(n) < 64){
-      stringstream ss;
-      long n_buf;
-      ss << n;
-      ss >> n_buf;
-
-      update(n_buf);
+   if (n != 1){
+      bound = SqrRoot(n+1);
+      if (!td(n, bound)){ //!aks(n_str)
+         update(n);
+      }
+      else {
+         td_factorization(n, bound);
+      }
    }
    return p;
 }
 
+
 void fermat_factorization(ZZ n, ZZ bound){
    ZZ a;
    a = SqrRoot(n + 1); //SqrRoot = floor(a^{1/2})
+   bound = n/2; //what is optimal bound??
 
    if (sqr(a) == n){
-      x_dim++; p_factors.SetDims(x_dim, y_dim);
-      stringstream s;
-      long conv_a;
-      s << a;
-      s >> conv_a;
-      p_factors[x_dim-1].put(0,conv_a);
-      p_factors[x_dim-1].put(1,2);
+      update(a);
+      update(a);
       return;
    }
    ZZ b;
    while(1){
       ZZ b1 = (a * a) - n;
-      b = SqrRoot(b1);
+      b = SqrRoot(abs(b1));
       if((b * b) == b1)
          break;
       else
          a += 1;
          if (a > bound) return;
    }
-   x_dim++; p_factors.SetDims(x_dim, y_dim);
-   stringstream s;
-   long conv_a;
-   s << (a-b);
-   s >> conv_a;
-   p_factors[x_dim-1].put(0,conv_a);
-   p_factors[x_dim-1].put(1,1);
-   x_dim++; p_factors.SetDims(x_dim, y_dim);
-   s << (a+b);
-   s >> conv_a;
-   p_factors[x_dim-1].put(0,conv_a);
-   p_factors[x_dim-1].put(1,1);
+   update(a-b);
+   update(a+b);
    return;
 }
 
@@ -169,16 +161,16 @@ int main(int argc, char* argv[])
       char n_str[10000];
       strcpy(n_str, inputstring->c_str());
       auto start = chrono::high_resolution_clock::now();
-      //int aks_result = aks(n_str);
-      //cout << "AKS| " << *inputstring << ": " << (aks_result ? "COMPOSITE" : "PRIME" ) << endl;
-      //if (aks_result == COMPOSITE){
+      int aks_result = aks(n_str);
+      cout << "AKS| " << *inputstring << ": " << (aks_result ? "COMPOSITE" : "PRIME" ) << endl;
+      if (aks_result == COMPOSITE){
          ZZ n = conv<ZZ>(n_str);
          ZZ bound = SqrRoot(n+1);
-         td_factorization(n, bound);
          //fermat_factorization(n, bound);
+         td_factorization(n, bound);
          cout << "Factorization| " << *inputstring << ": " << endl;
          cout << p_factors;
-     // }
+      }
       auto stop = chrono::high_resolution_clock::now();
       auto duration_s = chrono::duration_cast<chrono::seconds>(stop - start);
       auto duration_ms = chrono::duration_cast<chrono::milliseconds>(stop - start);
