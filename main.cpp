@@ -13,44 +13,56 @@ const int y_dim = 2;
 
 NTL_CLIENT
 
-int td(ZZ n, long bound){
+void update(long factor){
+   for (int i=0; i < x_dim; i++){
+      if (p_factors[i][0] == factor){
+         p_factors[i][1] += 1;
+         return; 
+      }
+   }
+   x_dim++; 
+   p_factors.SetDims(x_dim, y_dim);
+   p_factors[x_dim-1].put(0,factor);
+   p_factors[x_dim-1].put(1,1);
+
+}
+
+int td(ZZ n, ZZ bound){
    //trial division
    PrimeSeq s;  // generates primes in sequence quickly
    long p;
-   long bound2 = ceil(bound/2);
-
    p = s.next();  // first prime is always 2
-   while (p && p <= bound2) {
+   while (p && p <= bound) {
       if ((n % p) == 0) return COMPOSITE;
       p = s.next();  
    }
    return PRIME;
 }
 
-long td_factorization(ZZ n){
+long td_factorization(ZZ n, ZZ bound){
    //trial division
    PrimeSeq s;  // generates primes in sequence quickly
    long p;
    x_dim = 0;
    p_factors = Mat<long>();
-   long bound;
-   stringstream ss;
-   ZZ t = n/2;
-   ss << t;
-   ss >> bound;
 
    p = s.next();  // first prime is always 2
    while (p && p <= bound) {
       int c = 1;
       while ((n % p) == 0){
-         if (c == 1){ x_dim++; p_factors.SetDims(x_dim, y_dim);} 
-         p_factors[x_dim-1].put(0,p);
-         p_factors[x_dim-1].put(1,c);
+         update(p);
+         cout << p_factors(x_dim) << endl;
          c++; //ha!
          n = n / p;
       }
       p = s.next();  
    }
+   stringstream ss;
+   long n_buf;
+   ss << n;
+   ss >> n_buf;
+
+   update(n_buf);
    return p;
 }
 
@@ -114,6 +126,18 @@ void ask_for_mode(string *buffer){
    *buffer = n;
 }
 
+//helpful functions for QS
+/*
+GEN gprimepi_upper_bound(GEN x) as primepi_upper_bound, returns a t_REAL
+long Z_issmooth(GEN n, ulong lim) returns 1 if all the prime factors of the t_INT n are less or equal to lim.
+(maybe for testing) GEN Z_factor(GEN n) factors the t_INT n. The “primes” in the factorization are actually strong pseudoprimes.
+GEN F2Ms_colelim(GEN M, long nbrow) returns some subset of the columns of M as a t_VECSMALL of indices, selected such that the dimension of the kernel of the matrix is preserved. The subset is not guaranteed to be minimal.
+GEN FpMs_FpCs_solve_safe(GEN M, GEN B, long nbrow, GEN p) as above, but in the event that p is not a prime and an impossible division occurs, return NULL.
+GEN FpM_deplin(GEN x, GEN p) returns a nontrivial kernel vector, or NULL if none exist.
+GEN FpM_inv(GEN x, GEN p) returns a left inverse of x (the inverse if x is square), or NULL if x is not invertible.
+GEN bezout(GEN a, GEN b, GEN *u, GEN *v), returns the GCD d of t_INTs a and b and sets u,v to the Bezout coefficients such that au + bv = d.
+*/
+
 int main(int argc, char* argv[])
 {
    string *inputstring = (string *)malloc(sizeof(string));
@@ -130,7 +154,8 @@ int main(int argc, char* argv[])
       long ln;
       while (fscanf(fp, "%s", n_str) != EOF) {
          ZZ n = conv<ZZ>(n_str);
-         if (n < 1000) {ln = strtol(n_str,NULL,10); cout << "TD| " << n << ": " << ( td(n, ln)  ? "COMPOSITE" : "PRIME" ) << endl; }
+         ZZ bound = SqrRoot(n+1);
+         if (NumBits(n) < 30) cout << "TD| " << n << ": " << ( td(n, bound)  ? "COMPOSITE" : "PRIME" ) << endl;
          else
             cout << "AKS| " << n << ": " << (aks(n_str) ? "COMPOSITE" : "PRIME" ) << endl;
       }
@@ -146,7 +171,7 @@ int main(int argc, char* argv[])
       if (aks_result == COMPOSITE){
          ZZ n = conv<ZZ>(n_str);
          ZZ bound = SqrRoot(n+1);
-         td_factorization(n);
+         td_factorization(n, bound);
          //fermat_factorization(n, bound);
          cout << "Factorization| " << *inputstring << ": " << endl;
          cout << p_factors;
@@ -156,6 +181,9 @@ int main(int argc, char* argv[])
       auto duration_ms = chrono::duration_cast<chrono::milliseconds>(stop - start);
       auto duration_us = chrono::duration_cast<chrono::microseconds>(stop - start);
       cout << "\n\nTotal Elapsed Time: " << duration_s.count() << "." << duration_ms.count()-duration_s.count()*1000 << "." << duration_us.count()-duration_ms.count()*1000 << " (seconds.ms.us)\n";
+
+      long check = strtol(n_str,NULL,10);
+      pari_printf("%Ps\n", factoru(check));
       
       pari_close();
    }

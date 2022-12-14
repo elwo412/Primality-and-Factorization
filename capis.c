@@ -53,7 +53,7 @@ int aks(char *n_str) {
 	if (divisibility_check(n, r)) return COMPOSITE;
 
 	// (step 4) //only relevant when n <  5690034
-	//if (gcmp(n,r) < 1) return COMPOSITE; // <-- seems to fail for small primes
+	if (gcmp(n,r) < 1) return PRIME; // <-- seems to fail for small primes
 
 	//clean up stack
 	gerepileall(ltop, 3, &n, &r, &log2n_val);

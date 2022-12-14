@@ -34,8 +34,8 @@ typedef struct {
 } c_arg_package;
 
 // APIs
-int td(NTL::ZZ n, long bound);
-long td_factorization(NTL::ZZ n);
+int td(NTL::ZZ n, NTL::ZZ bound);
+long td_factorization(NTL::ZZ n, NTL::ZZ bound);
 int step5(NTL::ZZ n, long r, long bound);
 void ask_for_mode();
 
