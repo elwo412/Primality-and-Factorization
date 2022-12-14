@@ -133,7 +133,7 @@ int equal_polys(GEN n, GEN r){
 		if (return_results == 0) return COMPOSITE;
 
 		
-	}else{ clock_t t_start = clock();
+	}else{ //clock_t t_start = clock();
 		while (cmpii(a, bound) < 1){
 			GEN p, p_2;
 			p = FpXQ_pow(gadd(x, a), n, q, n); //As defined in paper

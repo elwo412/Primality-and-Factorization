@@ -9,7 +9,8 @@
 #include <sstream>
 #include <fstream>
 #include <pari/pari.h>
-#include <math.h> 
+#include <math.h>
+#include <chrono>
 
 // Macros
 #ifndef MY_EXTERNAL_DEFINE
@@ -34,6 +35,7 @@ typedef struct {
 
 // APIs
 int td(NTL::ZZ n, long bound);
+long td_factorization(NTL::ZZ n);
 int step5(NTL::ZZ n, long r, long bound);
 void ask_for_mode();
 
