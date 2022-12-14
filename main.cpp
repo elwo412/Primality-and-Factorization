@@ -51,18 +51,21 @@ long td_factorization(ZZ n, ZZ bound){
       int c = 1;
       while ((n % p) == 0){
          update(p);
-         cout << p_factors(x_dim) << endl;
          c++; //ha!
          n = n / p;
       }
       p = s.next();  
    }
-   stringstream ss;
-   long n_buf;
-   ss << n;
-   ss >> n_buf;
 
-   update(n_buf);
+   //assumes 64-bit system
+   if (NumBits(n) < 64){
+      stringstream ss;
+      long n_buf;
+      ss << n;
+      ss >> n_buf;
+
+      update(n_buf);
+   }
    return p;
 }
 
@@ -145,7 +148,7 @@ int main(int argc, char* argv[])
    else current_mode = FILE_INPUT;
    if (current_mode == FILE_INPUT){
       pari_init(7000000000, 10000000000);
-      char n_str[1000];
+      char n_str[10000];
       FILE *fp;
       if (!argv[1]) FILE* fp = fopen(inputstring->c_str(), "r");
       else fp = fopen(argv[1], "r");
@@ -163,27 +166,27 @@ int main(int argc, char* argv[])
       pari_close();
    } else {
       pari_init(7000000000, 10000000000);
-      char n_str[1000];
+      char n_str[10000];
       strcpy(n_str, inputstring->c_str());
       auto start = chrono::high_resolution_clock::now();
-      int aks_result = aks(n_str);
-      cout << "AKS| " << *inputstring << ": " << (aks_result ? "COMPOSITE" : "PRIME" ) << endl;
-      if (aks_result == COMPOSITE){
+      //int aks_result = aks(n_str);
+      //cout << "AKS| " << *inputstring << ": " << (aks_result ? "COMPOSITE" : "PRIME" ) << endl;
+      //if (aks_result == COMPOSITE){
          ZZ n = conv<ZZ>(n_str);
          ZZ bound = SqrRoot(n+1);
          td_factorization(n, bound);
          //fermat_factorization(n, bound);
          cout << "Factorization| " << *inputstring << ": " << endl;
          cout << p_factors;
-      }
+     // }
       auto stop = chrono::high_resolution_clock::now();
       auto duration_s = chrono::duration_cast<chrono::seconds>(stop - start);
       auto duration_ms = chrono::duration_cast<chrono::milliseconds>(stop - start);
       auto duration_us = chrono::duration_cast<chrono::microseconds>(stop - start);
       cout << "\n\nTotal Elapsed Time: " << duration_s.count() << "." << duration_ms.count()-duration_s.count()*1000 << "." << duration_us.count()-duration_ms.count()*1000 << " (seconds.ms.us)\n";
 
-      long check = strtol(n_str,NULL,10);
-      pari_printf("%Ps\n", factoru(check));
+      GEN check = strtoi(n_str);
+      pari_printf("%Ps\n", Z_factor(check));
       
       pari_close();
    }
