@@ -16,6 +16,12 @@
 #define THREADS 31576
 #endif
 
+typedef enum mode
+{
+    FULL_FACTOR_N = 0,
+    FILE_INPUT = 1,
+};
+
 typedef struct {
     GEN **a;
     GEN *x;
@@ -27,7 +33,7 @@ typedef struct {
 
 // APIs
 int td(NTL::ZZ n, long bound);
-int aks(NTL::ZZ n, char *n_pari);
 int step5(NTL::ZZ n, long r, long bound);
+void ask_for_mode();
 
 #endif

@@ -17,9 +17,11 @@ typedef enum n_type
 };
 
 // APIs
-long smallestR(char *n_str, long *log2n_buffer);
+GEN smallestR(GEN n);
 void print_test();
 int divisibility_check();
+int aks(char *n_str);
+int equal_polys(GEN n, GEN r);
 
 #endif
 

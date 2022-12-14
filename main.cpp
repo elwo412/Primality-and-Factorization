@@ -6,6 +6,11 @@ extern "C" {
 using namespace std;
 using namespace NTL;
 
+int current_mode;
+Mat<long> p_factors;
+int x_dim;
+const int y_dim = 2;
+
 NTL_CLIENT
 
 int td(ZZ n, long bound){
@@ -21,109 +26,90 @@ int td(ZZ n, long bound){
    return PRIME;
 }
 
-//slower than pari
-int step5(ZZ n, long r, long bound){
+long td_factorization(ZZ n, long bound){
+   //trial division
+   PrimeSeq s;  // generates primes in sequence quickly
+   long p;
+   x_dim = 0;
+   p_factors = Mat<long>();
 
-   //'binary' form
-   //ZZ n_bits = ZZ(n);
-
-   const ZZ c_n = ZZ(n);
-   ZZ_p::init(ZZ(c_n));
-
-   long a = 2;
-
-   //ZZ_pX P;
-   //NTL::BuildIrred(P, 10);
-
-   ZZ_pX q(r, 1); // (1)X^r
-   q -= 1; // X^r - 1
-   const ZZ_pXModulus qmod(q);
-
-   ZZ_pX p_2Poly(1, 1); //X
-   PowerMod(p_2Poly, p_2Poly, c_n, qmod); //X^n % X^r - 1
-   p_2Poly += a;
-
-   ZZ_pX p_2Polycmp;
-
-   //cout << bound << endl;
-
-
-   while (a <= bound){
-
-      //p_2Poly += a; // X^n + a
-
-      ZZ_pX pPoly(1, 1); //X
-      pPoly += a; //X + a
-
-      //SUCCESSIVE SQUARING (way slower)
-      /*
-      ZZ_pX temp = ZZ_pX(pPoly);
-      int k = 0;
-      long size_n_bits = NumBits(n);
-      //ZZ_pX *cached = (ZZ_pX *)malloc(sizeof(ZZ_pX)*size_n_bits);
-      //cached[0] = ZZ_pX(temp);
-      while (k < size_n_bits){
-         if (bit(n_bits, k) == 1){
-            //cout << "ADD TO TOTAL" << endl;
-            if (k != 0) pPoly = MulMod(pPoly, temp, qmod);
-            //cout << "[pPoly] LEADING DEG: " << deg(pPoly) << endl;
-         }  
-         temp = MulMod(temp, temp, qmod);
-         //cached[k] = ZZ_pX(temp);
-         //cout << "[temp] LEADING DEG: " << deg(temp) << endl;
-         k++;
+   p = s.next();  // first prime is always 2
+   while (p && p < bound) {
+      int c = 1;
+      while ((n % p) == 0){
+         if (c == 1){ x_dim++; p_factors.SetDims(x_dim, y_dim);} 
+         p_factors[x_dim-1].put(0,p);
+         p_factors[x_dim-1].put(1,c);
+         c++; //ha!
+         n = n / p;
       }
-      */
-      PowerMod(pPoly, pPoly, c_n, qmod); //(X + a)^n % X^r - 1
-      SetCoeff(p_2Poly, 0, a);
-      if (pPoly != p_2Poly) return COMPOSITE;
-      a += 1;
+      p = s.next();  
    }
-
-   return PRIME;
+   return p;
 }
 
-int aks(ZZ n, char *n_pari){
-   mpz_t n_mp;
-   mpz_init(n_mp);
-
-   stringstream ssa;
-   ssa << n;
-   mpz_set_str(n_mp, ssa.str().c_str(), 10);
-
-   // (step 1)
-   if (mpz_perfect_power_p(n_mp)){
-      return COMPOSITE;
+void ask_for_mode(string *buffer){
+   int option;
+   string n;
+   cout << "FINAL PROJECT\n-----------\nOptions: 1. Run routine on single number N\n2. Run routine on file input\n\n" << endl << "Option (1|2): ";
+   cin >> option;
+   if (option == 2){
+      current_mode = FILE_INPUT;
+      cout << "\x1B[2J\x1B[H";
+      cout << "File Name: ";
+      cin >> n;
+      cout << "\x1B[2J\x1B[H";
+   } else {
+      current_mode = FULL_FACTOR_N;
+      cout << "\x1B[2J\x1B[H";
+      cout << "Input N: ";
+      cin >> n;
    }
-   mpz_clear(n_mp);
 
-   // (step 2) note: if r and n are not coprime, then skip this r
-   long *step5bound = (long *)malloc(sizeof(long));
-   long r = smallestR(n_pari, step5bound);
-
-   // (step 3/4)
-   divisibility_check();
-
-   // (step 5)
-   return step5(n,r, *step5bound);
+   *buffer = n;
 }
 
 int main(int argc, char* argv[])
 {
-   pari_init(7000000000, 10000000000);
-   char n_str[1000];
-   FILE* fp = fopen(argv[1], "r");
-   print_test();
-   clock_t t_start = clock();
-   long ln;
-   while (fscanf(fp, "%s", n_str) != EOF) {
-      ZZ n = conv<ZZ>(n_str);
-      //if (n < 10) {ln = strtol(n_str,NULL,10); cout << "TD| " << n << ": " << td(n, ln) << endl; }
-      //else
-      cout << "AKS| " << n << ": " << aks(n, n_str) << endl;
-      //ln = strtol(n_str,NULL,10); cout << "TD| " << n << ": " << td(n, ln) << endl;
+   string *inputstring = (string *)malloc(sizeof(string));
+   if (!argv[1]) ask_for_mode(inputstring);
+   else current_mode = FILE_INPUT;
+   if (current_mode == FILE_INPUT){
+      pari_init(7000000000, 10000000000);
+      char n_str[1000];
+      FILE *fp;
+      if (!argv[1]) FILE* fp = fopen(inputstring->c_str(), "r");
+      else fp = fopen(argv[1], "r");
+      print_test();
+      clock_t t_start = clock();
+      long ln;
+      while (fscanf(fp, "%s", n_str) != EOF) {
+         ZZ n = conv<ZZ>(n_str);
+         if (n < 1000) {ln = strtol(n_str,NULL,10); cout << "TD| " << n << ": " << ( td(n, ln)  ? "COMPOSITE" : "PRIME" ) << endl; }
+         else
+            cout << "AKS| " << n << ": " << (aks(n_str) ? "COMPOSITE" : "PRIME" ) << endl;
+      }
+      printf("Total Elapsed Time: %f\n", (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
+      pari_close();
+   } else {
+      pari_init(7000000000, 10000000000);
+      char n_str[1000];
+      strcpy(n_str, inputstring->c_str());
+      clock_t t_start = clock();
+      int aks_result = aks(n_str);
+      cout << "AKS| " << *inputstring << ": " << (aks_result ? "COMPOSITE" : "PRIME" ) << endl;
+      if (aks_result == COMPOSITE){
+         long ln = strtol(n_str,NULL,10);
+         ZZ n = conv<ZZ>(n_str);
+         cout << "Factorization| " << *inputstring << ": " << td_factorization(n, ln) << endl;
+         cout << p_factors;
+      }
+      printf("\n\nTotal Elapsed Time: %f\n", (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
+      
+      pari_close();
    }
-   printf("Total Elapsed Time: %f\n", (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
-   pari_close();
+
+   free(inputstring);
+   
    return 0;
 }
