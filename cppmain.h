@@ -9,6 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include <pari/pari.h>
+#include <math.h> 
 
 // Macros
 #ifndef MY_EXTERNAL_DEFINE

@@ -32,9 +32,10 @@ long td_factorization(ZZ n, long bound){
    long p;
    x_dim = 0;
    p_factors = Mat<long>();
+   long log2bound = ceil(bound/2);
 
    p = s.next();  // first prime is always 2
-   while (p && p < bound) {
+   while (p && p <= log2bound) {
       int c = 1;
       while ((n % p) == 0){
          if (c == 1){ x_dim++; p_factors.SetDims(x_dim, y_dim);} 
@@ -101,7 +102,8 @@ int main(int argc, char* argv[])
       if (aks_result == COMPOSITE){
          long ln = strtol(n_str,NULL,10);
          ZZ n = conv<ZZ>(n_str);
-         cout << "Factorization| " << *inputstring << ": " << td_factorization(n, ln) << endl;
+         td_factorization(n, ln);
+         cout << "Factorization| " << *inputstring << ": " << endl;
          cout << p_factors;
       }
       printf("\n\nTotal Elapsed Time: %f\n", (double)(clock() - t_start) / (double)CLOCKS_PER_SEC);
