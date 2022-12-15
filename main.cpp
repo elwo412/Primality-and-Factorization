@@ -151,12 +151,11 @@ int main(int argc, char* argv[])
       auto start = chrono::high_resolution_clock::now();
       int aks_result = aks(n_str);
       cout << "AKS| " << *inputstring << ": " << (aks_result ? "COMPOSITE" : "PRIME" ) << endl;
-      QS();
-      exit(0); //FOR TESTING QS
       if (aks_result == COMPOSITE){
          ZZ n = conv<ZZ>(n_str);
          ZZ bound = SqrRoot(n+1);
          //fermat_factorization(n, bound);
+         //QS();
          td_factorization(n, bound);
          cout << "Factorization| " << *inputstring << ": " << endl;
          cout << p_factors;
