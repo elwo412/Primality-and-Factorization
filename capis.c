@@ -66,7 +66,6 @@ int aks(char *n_str) {
 void *compute_equality(void *args) {
 	GEN F;
 	GEN *N = (GEN *)pari_thread_start((struct pari_thread*) args);
-	F = stoi(0);
 	//pari_printf("%Ps \n", N[2]); //ISSUE IN THE STRUCT
 	GEN p = FpXQ_pow(gadd(N[2], N[0]), N[3], N[1], N[3]);
 	GEN p_2 = gadd(FpXQ_pow(N[2], N[3], N[1], N[3]), N[0]);
@@ -99,7 +98,6 @@ int equal_polys(GEN n, GEN r){
 		//threaded approach
 		max_thread = 16;
 		int count = 0;
-		int resultsarray[itos(bound)];
 		pthread_t _compute_tid[max_thread];
 		struct pari_thread _pari_t[max_thread];
 		GEN *arg_package;
@@ -121,16 +119,13 @@ int equal_polys(GEN n, GEN r){
 			for (int i = 0; i < max_thread; ++i) {
 				GEN F1;
 			    pthread_join(_compute_tid[i],(void*)&F1);
-			    resultsarray[i+count*max_thread] = itos(F1);
+			    return_results = gadd(return_results,  F1);
 			    pari_thread_free(&_pari_t[i]);
-
-			    return_results = gaddgs(return_results,  resultsarray[i+count*max_thread]);
 			}
 			free(arg_package);
 			count++;
+			if (!gequal0(return_results)) return COMPOSITE;
 		}
-
-		if (return_results == 0) return COMPOSITE;
 
 		
 	}else{ //clock_t t_start = clock();
