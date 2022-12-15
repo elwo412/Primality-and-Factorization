@@ -16,12 +16,18 @@ typedef enum n_type
     PRIME = 0,
 };
 
+typedef struct {
+    GEN first;
+    GEN second;
+} t_GEN_PAIR;
+
 // APIs
 GEN smallestR(GEN n);
 void print_test();
 int divisibility_check();
 int aks(char *n_str);
 int equal_polys(GEN n, GEN r);
+void QS();
 
 #endif
 

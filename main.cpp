@@ -121,18 +121,6 @@ void ask_for_mode(string *buffer){
    *buffer = n;
 }
 
-//helpful functions for QS
-/*
-GEN gprimepi_upper_bound(GEN x) as primepi_upper_bound, returns a t_REAL
-long Z_issmooth(GEN n, ulong lim) returns 1 if all the prime factors of the t_INT n are less or equal to lim.
-(maybe for testing) GEN Z_factor(GEN n) factors the t_INT n. The “primes” in the factorization are actually strong pseudoprimes.
-GEN F2Ms_colelim(GEN M, long nbrow) returns some subset of the columns of M as a t_VECSMALL of indices, selected such that the dimension of the kernel of the matrix is preserved. The subset is not guaranteed to be minimal.
-GEN FpMs_FpCs_solve_safe(GEN M, GEN B, long nbrow, GEN p) as above, but in the event that p is not a prime and an impossible division occurs, return NULL.
-GEN FpM_deplin(GEN x, GEN p) returns a nontrivial kernel vector, or NULL if none exist.
-GEN FpM_inv(GEN x, GEN p) returns a left inverse of x (the inverse if x is square), or NULL if x is not invertible.
-GEN bezout(GEN a, GEN b, GEN *u, GEN *v), returns the GCD d of t_INTs a and b and sets u,v to the Bezout coefficients such that au + bv = d.
-*/
-
 int main(int argc, char* argv[])
 {
    string *inputstring = (string *)malloc(sizeof(string));
@@ -163,6 +151,8 @@ int main(int argc, char* argv[])
       auto start = chrono::high_resolution_clock::now();
       int aks_result = aks(n_str);
       cout << "AKS| " << *inputstring << ": " << (aks_result ? "COMPOSITE" : "PRIME" ) << endl;
+      QS();
+      exit(0); //FOR TESTING QS
       if (aks_result == COMPOSITE){
          ZZ n = conv<ZZ>(n_str);
          ZZ bound = SqrRoot(n+1);

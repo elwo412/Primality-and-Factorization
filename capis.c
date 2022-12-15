@@ -165,3 +165,242 @@ void print_test(){
 	printf("WORKING\n");
 }
 
+/////QS IMPLEMENTATION
+//helpful functions for QS (may implement using NTL instead)
+/*
+GEN gprimepi_upper_bound(GEN x) as primepi_upper_bound, returns a t_REAL
+long Z_issmooth(GEN n, ulong lim) returns 1 if all the prime factors of the t_INT n are less or equal to lim.
+(maybe for testing) GEN Z_factor(GEN n) factors the t_INT n. The “primes” in the factorization are actually strong pseudoprimes.
+GEN F2Ms_colelim(GEN M, long nbrow) returns some subset of the columns of M as a t_VECSMALL of indices, selected such that the dimension of the kernel of the matrix is preserved. The subset is not guaranteed to be minimal.
+GEN FpMs_FpCs_solve_safe(GEN M, GEN B, long nbrow, GEN p) as above, but in the event that p is not a prime and an impossible division occurs, return NULL.
+GEN FpM_deplin(GEN x, GEN p) returns a nontrivial kernel vector, or NULL if none exist.
+GEN FpM_inv(GEN x, GEN p) returns a left inverse of x (the inverse if x is square), or NULL if x is not invertible.
+GEN bezout(GEN a, GEN b, GEN *u, GEN *v), returns the GCD d of t_INTs a and b and sets u,v to the Bezout coefficients such that au + bv = d.
+*/
+
+GEN generateFactorBase(GEN n, GEN b){
+	long b_bound = itos(b);
+	GEN factorbase = vectrunc_init(b_bound);
+
+	int count = 1;
+
+	GEN a = stoi(1);
+
+	while(cmpii(a,b) < 1) {
+
+		// Add a to factor base if n is a quadratic residue modulo a.
+		if (isprime(a) && kronecker(n, a) == 1){
+			vectrunc_append(factorbase, a);
+			count++;
+			if (count > b_bound) break;
+		}
+			
+
+		a = gaddgs(a, 1);
+	}
+	//pari_printf("%Ps\n", factorbase);
+
+	return factorbase;
+
+}
+
+void tonelliShanks(GEN n, GEN p, t_GEN_PAIR *pair){
+	if (cmpii(p, gen_2) == 0){
+		pair->first = n;
+		pair->second = n;
+		return;
+	}
+
+	// Define Q2^S = p - 1.
+	GEN Q = gsubgs(p, 1);
+	GEN S = gen_0;
+	while (gequal0(gmod(Q, gen_2))) {
+	    Q = gdiv(Q, gen_2);
+	    S = gadd(S, gen_1);
+	}
+
+	// Define z as the first quadratic non-residue modulo p.
+	GEN z = gen_2;
+	while (kronecker(z, p) != -1)
+	    z = gadd(z, gen_1);
+
+	// Initialize c, R, t and M.
+	GEN c = Fp_pow(z, Q, p);            // c = z^Q         (mod p)
+	GEN R = Fp_pow(n, gdiv((gadd(Q, gen_1)),gen_2), p);  // R = n^((Q+1)/2) (mod p)
+	GEN t = Fp_pow(n, Q, p);            // t = n^Q         (mod p)
+	GEN M = gcopy(S);
+
+	// Invariant: R^2 = nt (mod p)
+	while (!gequal1(gmod(t,p))) {
+		ltop = avma;
+	    // Find lowest 0 < i < M such that t^2^i = 1 (mod p).
+	    GEN i = gen_1;
+	    GEN n_i = powgi(gen_2, i);
+	    while (!gequal1(Fp_pow(t, n_i, p))){
+	        i = gaddgs(i, 1);
+	        n_i = powgi(gen_2, i);
+	    }
+
+	   // Set b = c^2^(M - i - 1)
+	    GEN im1 = gsub(M,i);
+	    GEN m_subi = gsub(im1, gen_1);
+	    GEN pow2msubi = powgi(gen_2, m_subi);
+	    GEN b = Fp_pow(c, pow2msubi, p);
+
+	    // Update c, R, t and M.
+	    R = gmod(gmul(R, b), p);     // R = Rb (mod p)
+	    t = gmod(gmul(t, gmul(b,b)), p); // t = tb^2
+	    c = gmod(gmul(b, b), p);      // c = b^2 (mod p)
+	    M = i;
+
+	    // Invariant: R^2 = nt (mod p)
+	}
+
+	pair->first = R;
+	pair->second = gsub(p,R);
+
+	return;
+}
+
+void QS(){
+	GEN loglogn_val = glog(log2n_val, DEFAULTPREC);
+	GEN sqrtn = mpfloor(gsqrt(n, DEFAULTPREC));
+
+	//smoothness bound (some minimum bound + ...)
+	GEN B = gadd(stoi(300), mpceil(gsqrt(gmul(loglogn_val,log2n_val) , DEFAULTPREC)));
+
+	// (step 1) data collection
+	GEN factorBase = generateFactorBase(n, B);
+
+	// (step 2) compute t_vec shanks method
+	long length_factorbase = lg(factorBase)-1;
+	t_GEN_PAIR indicies[length_factorbase];
+	
+	for (int i = 0; i < length_factorbase; i++){
+		GEN p = gel(factorBase, i+1);
+		GEN nmod_p = gmod(n, p);
+
+		tonelliShanks(nmod_p, p, &indicies[i]);
+
+		indicies[i].first = gmod(gadd(gmod(gsub(indicies[i].first, sqrtn),p),p),p);
+		indicies[i].second = gmod(gadd(gmod(gsub(indicies[i].second, sqrtn),p),p),p);
+		//pari_printf("%Ps %Ps\n", indicies[i].first, indicies[i].second);
+
+	}
+
+	// (step 3) SIEVING
+	int interval_length = 65535;
+	GEN intervalStart = gen_0;
+	GEN intervalEnd = stoi(interval_length);
+	GEN smooth = vectrunc_init(itos(B) + 25);
+	GEN smooth_factorizations = vectrunc_init(itos(B) + 25);
+	GEN log_approximations = zerovec(interval_length);  // Approx. 2-logarithms of a^2 - N.
+
+
+	// Rough log estimates instead of full approximations.
+	float log_estimate = 0;
+	int n_log_estimate = 1;
+	while (lg(smooth) < lg(factorBase) + 20) {
+	    
+	    // (step 3.1)
+	    // Generate log approximations of Q = (a + sqrt(N))^2 - N in the current interval.
+		GEN a = gadd(intervalStart,gen_1);
+	    for (int i = 1; i < interval_length; ++i) {
+	    	if (cmpsi(n_log_estimate, a) < 1) {
+                GEN Q = gsub(gmul(gadd(sqrtn, a),gadd(sqrtn, a)), n);
+                log_estimate = dbllog2r(Q);    // ~log_2(Q)
+                n_log_estimate = n_log_estimate * 1.8 + 1;
+            }
+	        gel(log_approximations, i+1) = dbltor(log_estimate);
+	        gaddz(gen_1, a, a);
+	    }
+
+	    
+	    //(step 3.2)
+	    //Sieve for numbers in the sequence that factor completely over the factor base.
+	    for (int i = 0; i < lg(factorBase)-1; ++i) {
+	        GEN p = gel(factorBase, i+1);
+	        GEN logp = gdiv(glog(p, DEFAULTPREC), constlog2(DEFAULTPREC));
+	        
+
+	        // Sieve first sequence.
+	        while (cmpii(indicies[i].first, intervalEnd) == -1) {
+	        	ltop = avma;
+	            gel(log_approximations, 1+itos(gsub(indicies[i].first, intervalStart))) = subrr(gel(log_approximations, 1+itos(gsub(indicies[i].first, intervalStart))), logp);
+	            indicies[i].first = gadd(indicies[i].first,p);
+	            gerepileall(ltop, 3, &p, &logp, &indicies[i].first);
+	        }
+
+	        if (cmpii(p, gen_2) == 0)
+	            continue; // a^2 = N (mod 2) only has one root.
+
+	        // Sieve second sequence.
+	        while (cmpii(indicies[i].second, intervalEnd) == -1) {
+	        	ltop = avma;
+	            gel(log_approximations, 1+itos(gsub(indicies[i].second, intervalStart))) = subrr(gel(log_approximations, 1+itos(gsub(indicies[i].second, intervalStart))), logp);
+	            indicies[i].second = gadd(indicies[i].second,p);
+	            gerepileall(ltop, 3, &p, &logp, &indicies[i].second);
+	        }
+	    }
+	    //printf("ITER1\n");
+
+	     
+	    // (step 3.3)
+	    a = intervalStart;
+	    //GEN bound_ap = gdiv(glog(gel(factorBase,lg(factorBase)-1), DEFAULTPREC), constlog2(DEFAULTPREC));
+	    for (int i = 0; i < interval_length; ++i) {
+	        if (1) { //gcmp(gel(log_approximations,i+1), bound_ap) == -1 //<---logapproximation must be off
+	        	//printf("HERE1\n");
+	            GEN Q = gsub(gmul(gadd(sqrtn, a),gadd(sqrtn, a)), n);
+	            GEN factors = vectrunc_init(100);
+	            //printf("HERE2\n");
+
+	            // For each factor p in the factor base.
+	            for (int j = 0; j < lg(factorBase)-1; ++j) {
+	                // Repeatedly divide Q by p until it's not possible anymore.
+	                GEN p = gel(factorBase, j+1);
+	                while (dvdii(Q, p)) {
+	                	//pari_printf("%Ps\n", Q);
+	                	//pari_printf("%Ps\n", p);
+	                    Q = diviiexact(Q, p);
+	                    vectrunc_append(factors, stoi(j)); // The j:th factor base number was a factor.
+	                    
+	                }
+	            }
+	            if (gequal1(Q)) {
+	            	//printf("ADDING ELEMENT\n");
+	                // Q really was B-smooth, so save its factors and the corresponding a.
+	                vectrunc_append(smooth_factorizations, factors); //need to combine vectors
+	                vectrunc_append(smooth, a);
+	            }
+	            if (lg(smooth) >= lg(factorBase) + 20)
+	                break; // We have enough smooth numbers, so stop factoring.
+	        }
+	        //printf("HERE0\n");
+	        a = gadd(gen_1, a);
+	    }
+	    //raise(SIGUSR1);
+
+	    // Move on to next interval.	    
+	    intervalStart = gaddgs(intervalStart, interval_length);
+	    intervalEnd = gaddgs(intervalEnd, interval_length);
+	    //printf("Next Interval\n");
+	}
+	//pari_printf("%Ps\n", smooth);
+	//pari_printf("%Ps\n", smooth_factorizations);
+	printf("ENOUGH FACTORS!!!\n");
+
+	// (step 4)
+	// Construct a binary matrix (gave up here)
+	printf("factorBase: %d | smof: %d\n", lg(factorBase), lg(smooth_factorizations));
+	GEN matrix =  zeromatcopy(lg(factorBase), lg(smooth_factorizations)+1);
+	for (int i=0; i < lg(smooth_factorizations); ++i){
+		for (int j=0; j < lg(gel(smooth_factorizations, i+1)); ++j){
+			gmael(matrix, i+1, j+1) = stoi(1);
+		}
+	}
+	printf("GOOD\n");
+	pari_printf("%Ps\n", matrix);
+
+}
+
