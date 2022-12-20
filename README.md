@@ -15,15 +15,16 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[Add Description]
+The AKS primality test is a reliable method for determining whether a given number N is prime or composite. It is a polynomial time algorithm with a predictable and efficient runtime, and has been rigorously proven to be accurate in all cases. If N is found to be composite using the AKS primality test, the number is then factored into its prime factorization using a combination of trial division, fermat's method, and the quadratic sieve. Trial division is used for small prime factors, the quadratic sieve is used for larger prime factors, and fermat's method is used for extreme cases.
 
-Features:
-* todo
-* todo
-* todo
+Trial division is used for finding small prime factors, where N is divided by all possible prime factors up to its square root. For larger prime factors, the quadratic sieve works by sieving for integers that can be factored using a predetermined factor base. It then sets up a matrix using these integers and their corresponding congruences, and solves the matrix using linear algebra techniques to find a congruence of squares modulo N. This congruence can then be used to obtain a factorization of N. Finally, for extreme cases where the other methods are not efficient, fermat's method is used. This involves using the fermat's little theorem to quickly check for potential prime factors that would otherwise be challenging to find by the previous methods. By using these methods in combination, the prime factorization of N can be accurately and efficiently determined.
 
+**Features:**
+* Partially Parrellized Primality Test
+* Factorization of Composites using Trial Division and Fermat's Method
 
-
+**To do:**
+* Fully implement QS and verify its correctness
 
 ### Built With
 
@@ -40,10 +41,9 @@ C/C++, Pari GP, NTL, GMP, Gfx2 (not necessary)
 ### Basic Usage
 
 _Below are some examples on how to interface with the program._
-
-<p>
-
-1. Compile the program
+<br />
+<br />
+1.0. Compile the program
    ```sh
    make clean; make cppversion
    ```
@@ -55,7 +55,6 @@ _Below are some examples on how to interface with the program._
    ```js
    ./main first1000.txt
    ```
-</p>
 
 
 
